@@ -1,0 +1,292 @@
+Default:
+    # Default dictionary:
+    # These values are used unless a
+    # specific broker entry overrides them
+    intervals:
+        # intervals: Interval values for each "mode"
+        #
+        # Each field is a mode name
+        # Current modes are:
+        # single, multi, limited, openua, openeu
+        #
+        # See `prepare_test_tender_data()`
+        # in `service_keywords.py` for more details
+        #
+        # If some mode is not specified,
+        # time values are taken from "default"
+        default:
+            # default: Used for modes that are not present in `intervals`
+            #
+            # enquiry, tender: Period names with corresponding time values
+            #
+            # Other mode-specific fields are allowed too
+            #
+            # First number in list:  Delay before period starts (for startDate)
+            # Second number in list: Duration of period (for endDate)
+            enquiry: [0, 11]
+            tender:  [0, 31]
+            # accelerator: Integer value
+            # This is not a name of period
+            # Please refer to API documentation to find out what's this
+            accelerator: 1440
+        openua:
+            accelerator: 1440
+            tender:  [0, 15]
+            # Please remember that openUA and openEU procedures
+            # forbid anyone to set or modify enquiryPeriod
+            # (it is set automatically)
+        openeu:
+            accelerator: 1440
+            tender:  [0, 30]
+        open_competitive_dialogue:
+            accelerator: 1440
+            tender:  [0, 30]
+    # Synchronization delay, in seconds
+    timeout_on_wait: 300
+Quinta:
+    intervals:
+        default:
+            enquiry: [0, 20]
+            tender:  [0, 20]
+        openua:
+            tender:  [1, 30]
+        openeu:
+            tender:  [1, 35]
+        open_competitive_dialogue:
+            accelerator: 1440
+            tender:  [0, 30]
+    keywords_file: openprocurement_client
+    roles:
+        provider:       Tender_User
+        provider1:      Tender_User1
+        provider2:      Tender_User2
+        tender_owner:   Tender_Owner
+        viewer:         Tender_Viewer
+    timeout_on_wait: 15
+Etender:
+    intervals:
+        default:
+            enquiry: [0, 5]
+    keywords_file: etender
+    roles:
+        provider:       Etender_Provider1
+        provider1:      Etender_Provider2
+        tender_owner:   Etender_Owner
+        viewer:         Etender_Viewer
+    timeout_on_wait: 60
+DZO:
+    intervals:
+        default:
+            enquiry: [0, 20]
+            tender:  [0, 20]
+        openua:
+            accelerator: 720
+            tender:  [0, 30]
+    keywords_file: dzo
+    roles:
+        tender_owner:   DZO_Owner
+        provider:       DZO_Provider
+        provider1:      DZO_Provider1
+        viewer:         DZO_Viewer
+    timeout_on_wait: 300
+ztv:
+    intervals:
+        default:
+            enquiry: [0, 17]
+            tender:  [0, 16]
+    keywords_file: ztv
+    roles:
+        tender_owner:   ztv_Owner
+        provider:   ztv_Provider
+        provider1:   ztv_Provider1
+        viewer:   ztv_Viewer
+    timeout_on_wait: 300
+Newtend:
+    keywords_file: newtend
+    roles:
+        provider:       Newtend_Provider1
+        tender_owner:   Newtend_Owner
+        viewer:         Newtend_Viewer
+    timeout_on_wait: 60
+PrivatMarket:
+    intervals:
+        default:
+            enquiry: [0, 15]
+            tender:  [0, 15]
+    keywords_file: privatmarket
+    roles:
+        provider:       PrivatMarket_Provider
+        provider1:      PrivatMarket_Provider1
+        viewer:         PrivatMarket_Viewer
+    timeout_on_wait: 30
+Prom:
+    intervals:
+        default:
+            enquiry: [4, 4]
+            tender:  [0,  30]
+    keywords_file: prom
+    roles:
+        tender_owner:   Prom_Owner
+        viewer:         Prom_Viewer
+        provider:       Prom_Provider1
+    timeout_on_wait: 10
+Publicbid:
+    intervals:
+        default:
+            enquiry: [1, 10]
+            tender:  [1, 12]
+    keywords_file: publicbid
+    roles:
+        provider:       Publicbid_Provider1
+        tender_owner:   Publicbid_Owner
+        viewer:         Publicbid_Viewer
+    timeout_on_wait: 120
+PublicPortal:
+    keywords_file: publicportal
+    roles:
+        viewer:         PublicPortal_Viewer
+    timeout_on_wait: 300
+SmartTender:
+    intervals:
+        default:
+            enquiry: [0, 10]
+            tender:  [0, 20]
+        openua:
+            accelerator: 1440
+            tender:  [0, 15]
+        openeu:
+            tender:  [0, 30]
+            accelerator: 1440
+    keywords_file: smarttender
+    roles:
+        provider:       SmartTender_Provider1
+        provider1:      SmartTender_Provider2
+        tender_owner:   SmartTender_Owner
+        viewer:         SmartTender_Viewer
+    timeout_on_wait: 300
+uatenders:
+    intervals:
+        default:
+            enquiry: [0, 20]
+            tender:  [0, 30]
+    keywords_file: uatenders
+    roles:
+        provider:       uatenders_Provider
+        tender_owner:   uatenders_Owner
+        viewer:         uatenders_Viewer
+    timeout_on_wait: 60
+ubiz:
+    intervals:
+        default:
+            enquiry: [0, 5]
+    keywords_file: ubiz
+    homepage: 'http://fgvfo.com.ua/'
+    roles:
+        provider:       ubiz_Provider1
+        provider1:      ubiz_Provider2
+        tender_owner:   ubiz_Owner
+        viewer:         ubiz_Viewer
+    timeout_on_wait: 50
+zakpro:
+    intervals:
+        default:
+            enquiry: [0, 20]
+            tender:  [0, 15]
+    keywords_file: zakpro
+    roles:
+        provider:       zakpro_Provider
+        provider1:      zakpro_Provider1
+        tender_owner:   zakpro_Owner
+        viewer:         zakpro_Viewer
+    timeout_on_wait: 300
+proztorg:
+    intervals:
+        default:
+            enquiry: [0, 5]
+    keywords_file: proztorg
+    homepage: 'http://proztorg.com.ua/'
+    roles:
+        provider:       proztorg_Provider1
+        provider1:      proztorg_Provider2
+        tender_owner:   proztorg_Owner
+        viewer:         proztorg_Viewer
+    timeout_on_wait: 50
+uub:
+    intervals:
+        default:
+            enquiry: [0, 8]
+            tender:  [0, 10]
+        openua:
+            accelerator: 1440
+            tender:  [0, 15]
+        openeu:
+            tender:  [0, 30]
+            accelerator: 1440
+    keywords_file: uub
+    roles:
+        tender_owner:   uub_Owner
+        provider:       uub_Provider
+        provider1:      uub_Provider1
+        viewer:         uub_Viewer
+    timeout_on_wait: 15
+APStender:
+    keywords_file: aps
+    roles:
+        viewer:         aps_Viewer
+        provider:       aps_Provider
+        provider1:      aps_Provider1
+        tender_owner:   aps_Owner
+    intervals:
+        default:
+            enquiry: [0, 15]
+            tender:  [0, 15]
+    timeout_on_wait: 10
+alltenders:
+    intervals:
+        default:
+            enquiry: [0, 10]
+            tender:  [0, 30]
+        openeu:
+            accelerator: 3600
+            tender:  [1, 14]
+        single:
+            enquiry: [0, 7]
+            tender:  [0, 9]
+    keywords_file: alltenders
+    homepage: 'https://prozorro.shadowy.eu/?mode=test&notification=off'
+    roles:
+        provider:       alltenders_Provider1
+        provider1:      alltenders_Provider2
+        tender_owner:   alltenders_Owner
+        viewer:         alltenders_Viewer
+    timeout_on_wait: 70
+Kapitalist:
+    intervals:
+        default:
+            enquiry: [0, 2]
+            tender:  [0, 2]
+    keywords_file: kapitalist
+    roles:
+        tender_owner:   kapitalist_Owner
+        provider:       kapitalist_Provider
+        provider1:      kapitalist_Provider1
+        viewer:         kapitalist_Viewer
+    timeout_on_wait: 80
+Accept:
+    intervals:
+        default:
+            accelerator: 150
+            enquiry: [0, 32]
+            tender:  [0, 20]
+        negotiation:
+            accelerator: 600
+            enquiry: [0, 20]
+            tender:  [0, 20]
+    keywords_file: accept
+    roles:
+        viewer:         accept_Viewer
+        provider:       accept_Provider
+        provider1:      accept_Provider1
+        tender_owner:   accept_Owner
+    timeout_on_wait: 70
+    
