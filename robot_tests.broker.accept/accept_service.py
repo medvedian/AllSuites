@@ -59,6 +59,10 @@ def plus_1_min(date):
     min1 = timedelta(minutes = 1)
     return datetime.strftime((new_time+min1), "%H:%M")
 
+def plus_20_min(date):
+    new_time = parse_date(date)
+    min1 = timedelta(minutes =20)
+    return datetime.strftime((new_time+min1), "%H:%M")
 
 def convert_datetime_to_new_time(isodate):
     iso_dt = parse_date(isodate)
@@ -82,13 +86,14 @@ def tax_adapt(tax):
         tax = True
     elif tax == u'з ПДВ':
         tax = True
+    elif tax == u' (з ПДВ)':
+        tax = True
     else:
         tax = False
     return tax
 
 def download_file(url, file_name, output_dir):
     urllib.urlretrieve(url, ('{}/{}'.format(output_dir, file_name)))
-
 
 def trim_data(data):
     return data.strip()
@@ -124,7 +129,6 @@ def get_numberic_part(somevalue):
             resvalue = resvalue + '.'
     return resvalue
 
-
 def do_strip_date(somevalue):
     resvalue = somevalue.strip()
     resvalue = resvalue.strip("\t\n")
@@ -134,7 +138,57 @@ def do_strip_date(somevalue):
     resvalue = resvalue.replace("\r", "")
     return resvalue
 
-
 def convert_dt(somedate):
     dt = datetime.datetime.strptime(somedate, "%d.%m.%Y %H:%M")
     return dt
+
+def adapt_numbers(data):
+    return repr(data)
+
+def adapt_numbers2(data):
+    return float(data)
+
+def adapt_doc_type(data):
+    if data == u'financial_documents':
+        data = u'commercialProposal'
+    elif data == u'qualification_documents':
+        data = u'qualificationDocuments'
+    elif data == u'eligibility_documents':
+        data = u'eligibilityDocuments'
+    else:
+        data = u'technicalSpecifications'
+    return data
+
+def cut_string(text):
+    return text[:-1]
+
+def get_proposition_status(data):
+    if data == u'Допущено до аукціону':
+        data = u'active'
+    elif data == u'На розгляді':
+        data = u'pending'
+    else:
+        data = u'FUCKUP'
+    return data
+
+def percents(data):
+    return int(data*100)
+
+def get_currency(somevalue):
+    resvalue = ""
+    for i in somevalue:
+        if i not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "." , ","]:
+            resvalue = resvalue + i
+    resvalue = resvalue.strip()
+    if  resvalue == u'грн':
+        resvalue = u'UAH'
+    return resvalue
+
+
+
+
+
+
+
+
+
