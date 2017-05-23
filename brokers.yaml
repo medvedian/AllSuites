@@ -278,10 +278,10 @@ Accept:
             accelerator: 150
             enquiry: [0, 32]
             tender:  [0, 20]
-        negotiation:
-            accelerator: 600
+        openua:
+            accelerator: 1440
             enquiry: [0, 20]
-            tender:  [0, 20]
+            tender:  [0, 30]
     keywords_file: accept
     roles:
         viewer:         accept_Viewer

@@ -85,7 +85,299 @@ Login
   run keyword if  '${TENDER_TYPE}' == 'negotiation'         Створити тендер negotiation        @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'complaints'          Створити тендер complaints         @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'    Створити тендер aboveThresholdEU   @{ARGUMENTS}
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'    Створити тендер aboveThresholdUA   @{ARGUMENTS}
   [return]  ${TENDER_UA}
+
+Створити тендер aboveThresholdUA
+  [Arguments]  @{ARGUMENTS}
+  [Documentation]
+  ...      ${ARGUMENTS[0]} ==  username
+  ...      ${ARGUMENTS[1]} ==  tender_data
+  log  ${ARGUMENTS[1]}
+  log to console  ${ARGUMENTS[0]}
+    ${title}=                             Get From Dictionary             ${ARGUMENTS[1].data}                        title
+    ${title_en}=                          Get From Dictionary             ${ARGUMENTS[1].data}                        title_en
+    ${description}=                       Get From Dictionary             ${ARGUMENTS[1].data}                        description
+    ${description_en}=                    Get From Dictionary             ${ARGUMENTS[1].data}                        description_en
+    ${vat}=                               get from dictionary             ${ARGUMENTS[1].data.value}                  valueAddedTaxIncluded
+    ${currency}=                          Get From Dictionary             ${ARGUMENTS[1].data.value}                  currency
+    ${lots}=                              Get From Dictionary             ${ARGUMENTS[1].data}                        lots
+    ${lot_description}=                   Get From Dictionary             ${lots[0]}                                  description
+    ${lot_title}=                         Get From Dictionary             ${lots[0]}                                  title
+    set global variable  ${lot_title}
+    ${lot_title_en}=                      Get From Dictionary             ${lots[0]}                                  title_en
+    ${lot_amount}=                        adapt_numbers                   ${ARGUMENTS[1].data.lots[0].value.amount}
+    ${lot_amount_str}=                    convert to string               ${lot_amount}
+    log to console  *
+    log to console  ${lot_amount_str}
+    ${lot_minimal_step_amount}=           adapt_numbers                   ${lots[0].minimalStep.amount}
+    ${lot_minimal_step_amount_str}=       convert to string               ${lot_minimal_step_amount}
+    log to console  ${lot_minimal_step_amount_str}
+    ${items}=                             Get From Dictionary             ${ARGUMENTS[1].data}                        items
+    ${item_description}=                  Get From Dictionary             ${items[0]}                                 description
+    set global variable  ${item_description}
+    ${item_description_en}=               Get From Dictionary             ${items[0]}                                 description_en
+    # Код CPV
+    ${item_scheme}=                       Get From Dictionary             ${items[0].classification}                  scheme
+    ${item_id}=                           Get From Dictionary             ${items[0].classification}                  id
+    ${item_descr}=                        Get From Dictionary             ${items[0].classification}                  description
+
+    #Код ДК
+    run keyword and ignore error  Отримуємо код ДК  ${ARGUMENTS[1]}
+
+    ${item_quantity}=                     Get From Dictionary             ${items[0]}                                 quantity
+    ${item_unit}=                         Get From Dictionary             ${items[0].unit}                            name
+    #адреса поставки
+    ${item_streetAddress}=                Get From Dictionary             ${items[0].deliveryAddress}                 streetAddress
+    ${item_locality}=                     Get From Dictionary             ${items[0].deliveryAddress}                 locality
+    ${item_region}=                       Get From Dictionary             ${items[0].deliveryAddress}                 region
+    ${item_postalCode}=                   Get From Dictionary             ${items[0].deliveryAddress}                 postalCode
+    ${item_countryName}=                  Get From Dictionary             ${items[0].deliveryAddress}                 countryName
+    #період подачі пропозицій
+    ${tenderPeriod_endDate}=              Get From Dictionary             ${ARGUMENTS[1].data.tenderPeriod}           endDate
+    #період доставки
+    ${delivery_startDate}=                Get From Dictionary             ${items[0].deliveryDate}                    startDate
+    ${delivery_endDate}=                  Get From Dictionary             ${items[0].deliveryDate}                    endDate
+    #конвертація дат та часу
+    ${tenderPeriod_endDate_str}=          convert_datetime_to_new         ${tenderPeriod_endDate}
+	${tenderPeriod_endDate_time}=         plus_1_min    ${tenderPeriod_endDate}
+    ${delivery_StartDate_str}=            convert_datetime_to_new         ${delivery_startDate}
+	${delivery_StartDate_time}=           convert_datetime_to_new_time    ${delivery_startDate}
+    ${delivery_endDate_str}=              convert_datetime_to_new         ${delivery_endDate}
+	${delivery_endDate_time}=             convert_datetime_to_new_time    ${delivery_endDate}
+    ${features}=                          Get From Dictionary             ${ARGUMENTS[1].data}                        features
+    #Нецінові крітерії лоту
+    ${lot_features_title}=                Get From Dictionary             ${features[0]}                              title
+    ${lot_features_description} =         Get From Dictionary             ${features[0]}                              description
+    ${lot_features_of}=                   Get From Dictionary             ${features[0]}                              featureOf
+    ${lot_non_price_1_value}=             convert to number               ${features[0].enum[0].value}
+    ${lot_non_price_1_value}=             percents                        ${lot_non_price_1_value}
+    ${lot_non_price_1_value}=             convert to string               ${lot_non_price_1_value}
+    ${lot_non_price_1_title}=             Get From Dictionary             ${features[0].enum[0]}                      title
+    ${lot_non_price_2_value}=             convert to number               ${features[0].enum[1].value}
+    ${lot_non_price_2_value}=             percents                        ${lot_non_price_2_value}
+    ${lot_non_price_2_value}=             convert to string               ${lot_non_price_2_value}
+    ${lot_non_price_2_title}=             Get From Dictionary             ${features[0].enum[1]}                      title
+    ${lot_non_price_3_value}=             convert to number               ${features[0].enum[2].value}
+    ${lot_non_price_3_value}=             percents                        ${lot_non_price_3_value}
+    ${lot_non_price_3_value}=             convert to string               ${lot_non_price_3_value}
+    ${lot_non_price_3_title}=             Get From Dictionary             ${features[0].enum[2]}                      title
+    #Нецінові крітерії тендеру
+    ${tender_features_title}=             Get From Dictionary             ${features[1]}                              title
+    ${tender_features_description} =      Get From Dictionary             ${features[1]}                              description
+    ${tender_features_of}=                Get From Dictionary             ${features[1]}                              featureOf
+    ${tender_non_price_1_value}=          convert to number               ${features[1].enum[0].value}
+    ${tender_non_price_1_value}=          percents                        ${tender_non_price_1_value}
+    ${tender_non_price_1_value}=          convert to string               ${tender_non_price_1_value}
+    ${tender_non_price_1_title}=          Get From Dictionary             ${features[1].enum[0]}                      title
+    ${tender_non_price_2_value}=          convert to number               ${features[1].enum[1].value}
+    ${tender_non_price_2_value}=          percents                        ${tender_non_price_2_value}
+    ${tender_non_price_2_value}=          convert to string               ${tender_non_price_2_value}
+    ${tender_non_price_2_title}=          Get From Dictionary             ${features[1].enum[1]}                      title
+    ${tender_non_price_3_value}=          convert to number               ${features[1].enum[2].value}
+    ${tender_non_price_3_value}=          percents                        ${tender_non_price_3_value}
+    ${tender_non_price_3_value}=          convert to string               ${tender_non_price_3_value}
+    ${tender_non_price_3_title}=          Get From Dictionary             ${features[1].enum[2]}                      title
+    #Нецінові крітерії айтему
+    ${item_features_title}=               Get From Dictionary             ${features[2]}                              title
+    ${item_features_description} =        Get From Dictionary             ${features[2]}                              description
+    ${item_features_of}=                  Get From Dictionary             ${features[2]}                              featureOf
+    ${item_non_price_1_value}=            convert to number               ${features[2].enum[0].value}
+    ${item_non_price_1_value}=            percents                        ${item_non_price_1_value}
+    ${item_non_price_1_value}             convert to string               ${item_non_price_1_value}
+    ${item_non_price_1_title}=            Get From Dictionary             ${features[2].enum[0]}                      title
+    ${item_non_price_2_value}=            convert to number               ${features[2].enum[1].value}
+    ${item_non_price_2_value}=            percents                        ${item_non_price_2_value}
+    ${item_non_price_2_value}=            convert to string               ${item_non_price_2_value}
+    ${item_non_price_2_title}=            Get From Dictionary             ${features[2].enum[1]}                      title
+    ${item_non_price_3_value}=            convert to number               ${features[2].enum[2].value}
+    ${item_non_price_3_value}=            percents                        ${item_non_price_3_value}
+    ${item_non_price_3_value}=            convert to string               ${item_non_price_3_value}=
+    ${item_non_price_3_title}=            Get From Dictionary             ${features[2].enum[2]}                      title
+    #Контактна особа
+	${contact_point_name}=                Get From Dictionary             ${ARGUMENTS[1].data.procuringEntity.contactPoint}    name
+	${contact_point_phone}=               Get From Dictionary             ${ARGUMENTS[1].data.procuringEntity.contactPoint}    telephone
+	${contact_point_fax}=                 Get From Dictionary             ${ARGUMENTS[1].data.procuringEntity.contactPoint}    faxNumber
+	${contact_point_email}=               Get From Dictionary             ${ARGUMENTS[1].data.procuringEntity.contactPoint}    email
+    ${acceleration_mode}=                 Get From Dictionary             ${ARGUMENTS[1].data}                                 procurementMethodDetails
+    #клікаєм на "Мій кабінет"
+    click element  xpath=(.//span[@class='ng-binding ng-scope'])[3]
+    sleep  2
+    wait until element is visible  ${Кнопка "Мої закупівлі"}  30
+    click element  ${Кнопка "Мої закупівлі"}
+    sleep  2
+    wait until element is visible  ${Кнопка "Створити"}  30
+    click element  ${Кнопка "Створити"}
+    sleep  1
+    wait until element is visible  ${Поле "Узагальнена назва закупівлі"}  30
+    click element  id=procurementMethodType
+    sleep  2
+    click element  xpath=//div [@class='md-select-menu-container md-active md-clickable']//md-select-menu [@class = '_md']//md-content [@class = '_md']//md-option[2]
+    input text  ${Поле "Узагальнена назва закупівлі"}  ${title}
+    sleep  2
+    run keyword if       '${vat}'     click element      id=tender-value-vat
+    sleep  1
+    input text  id=description     ${description}
+    sleep  1
+    #Заповнюємо дати
+    input text  xpath=(.//input[@class='md-datepicker-input'])[1]                       ${tenderPeriod_endDate_str}
+    sleep  3
+    input text   xpath=(//*[@id="timeInput"])[1]                                        ${tenderPeriod_endDate_time}
+    sleep  3
+    #Переходимо на вкладку "Лоти закупівлі"
+    execute javascript  angular.element("md-tab-item")[1].click()
+    sleep  2
+    wait until element is visible  ${Поле "Узагальнена назва лоту"}  30
+    input text      ${Поле "Узагальнена назва лоту"}                                    ${lot_title}
+    #заповнюємо поле "Очікувана вартість закупівлі"
+    input text      amount-lot-value.0                                                  ${lot_amount_str}
+    sleep  1
+    #Заповнюємо поле "Примітки"
+    input text      lotDescription-0                                                    ${lot_description}
+    #Заповнюємо поле "Мінімальний крок пониження ціни"
+    input text      amount-lot-minimalStep.0                                            ${lot_minimal_step_amount_str}
+    #переходимо на вкладку "Специфікації закупівлі"
+    Execute Javascript  $($("app-tender-lot")).find("md-tab-item")[1].click()
+    wait until element is visible  ${Поле "Конкретна назва предмета закупівлі"}  30
+    input text      ${Поле "Конкретна назва предмета закупівлі"}                        ${item_description}
+    input text      id=itemQuantity--                                                   ${item_quantity}
+    #Заповнюємо поле "Код ДК 021-2015 "
+    Execute Javascript    $($('[id=cpv]')[0]).scope().value.classification = {id: "${item_id}", description: "${item_descr}", scheme: "${item_scheme}"};
+    sleep  2
+    #Заповнюємо додаткові коди
+    run keyword and ignore error  Заповнюємо додаткові коди
+    sleep  2
+    #Заповнюємо поле "Одиниці виміру"
+    Select From List  id=unit-unit--  ${item_unit}
+    #Заповнюємо датапікери
+    input text      xpath=(*//input[@class='md-datepicker-input'])[2]                   ${delivery_StartDate_str}
+    sleep  2
+    input text      xpath=(//*[@id="timeInput"])[2]                                     ${delivery_StartDate_time}
+    sleep  2
+    input text      xpath=(.//input[@class='md-datepicker-input'])[3]                   ${delivery_endDate_str}
+    sleep  2
+    input text      xpath=(//*[@id="timeInput"])[3]                                     ${delivery_endDate_time}
+    sleep  2
+    #Заповнюємо адресу доставки
+    select from list  id=countryName.value.deliveryAddress--                            ${item_countryName}
+    input text        id=streetAddress.value.deliveryAddress--                          ${item_streetAddress}
+    input text        id=locality.value.deliveryAddress--                               ${item_locality}
+    input text        id=region.value.deliveryAddress--                                 ${item_region}
+    input text        id=postalCode.value.deliveryAddress--                             ${item_postalCode}
+    sleep  2
+
+    #Переходимо на вкладку "Інші крітерії оцінки"
+    Execute Javascript          angular.element("md-tab-item")[2].click()
+    sleep  3
+    #заповнюємо нецінові крітерії лоту
+    click element               featureAddAction
+    sleep  1
+    input text                  xpath=(//*[@id="feature.title."])[1]                    ${lot_features_title}
+    input text                  xpath=(//*[@id="feature.description."])[1]              ${lot_features_description}
+    select from list by value   xpath=(//*[@id="feature.featureOf."])[1]                ${lot_features_of}
+    sleep  2
+    select from list by label   xpath=//*[@id="feature.relatedItem."][1]                ${lot_title}
+    sleep  2
+    click element               xpath=(//*[@id="enumAddAction"])[1]
+    sleep  1
+    input text                  enum.title.0.0                                          ${lot_non_price_1_title}
+    input text                  enum.value.0.0                                          ${lot_non_price_1_value}
+    click element               xpath=(//*[@id="enumAddAction"])[1]
+    sleep  1
+    input text                  enum.title.0.1                                          ${lot_non_price_2_title}
+    input text                  enum.value.0.1                                          ${lot_non_price_2_value}
+    click element               xpath=(//*[@id="enumAddAction"])[1]
+    sleep  1
+    input text                  enum.title.0.2                                          ${lot_non_price_3_title}
+    input text                  enum.value.0.2                                          ${lot_non_price_3_value}
+
+    Execute Javascript    angular.element("md-tab-item")[3].click()
+    sleep  3
+    Execute Javascript    angular.element("md-tab-item")[2].click()
+    sleep  3
+
+    #заповнюємо нецінові крітерії тендеру
+    click element               featureAddAction
+    sleep  1
+    input text                  xpath=(//*[@id="feature.title."])[2]                    ${tender_features_title}
+    input text                  xpath=(//*[@id="feature.description."])[2]              ${tender_features_description}
+    select from list by value   xpath=(//*[@id="feature.featureOf."])[2]                ${tender_features_of}
+    sleep  2
+    click element               xpath=(//*[@id="enumAddAction"])[2]
+    sleep  1
+    input text                  enum.title.1.0                                          ${tender_non_price_1_title}
+    input text                  enum.value.1.0                                          ${tender_non_price_1_value}
+    click element               xpath=(//*[@id="enumAddAction"])[2]
+    sleep  1
+    input text                  enum.title.1.1                                          ${tender_non_price_2_title}
+    input text                  enum.value.1.1                                          ${tender_non_price_2_value}
+    click element               xpath=(//*[@id="enumAddAction"])[2]
+    sleep  1
+    input text                  enum.title.1.2                                          ${tender_non_price_3_title}
+    input text                  enum.value.1.2                                          ${tender_non_price_3_value}
+    Execute Javascript    angular.element("md-tab-item")[3].click()
+    sleep  3
+    Execute Javascript    angular.element("md-tab-item")[2].click()
+    sleep  3
+    #заповнюємо нецінові крітерії айтему
+    click element               featureAddAction
+    sleep  1
+    input text                  xpath=(//*[@id="feature.title."])[3]                    ${item_features_title}
+    input text                  xpath=(//*[@id="feature.description."])[3]              ${item_features_description}
+    select from list by value   xpath=(//*[@id="feature.featureOf."])[3]                ${item_features_of}
+    sleep  3
+    select from list by label   xpath=(//*[@id="feature.relatedItem."])[2]                ${item_description}
+    sleep  3
+    click element               xpath=(//*[@id="enumAddAction"])[3]
+    sleep  1
+    input text                  enum.title.2.0                                          ${item_non_price_1_title}
+    input text                  enum.value.2.0                                          ${item_non_price_1_value}
+    click element               xpath=(//*[@id="enumAddAction"])[3]
+    sleep  1
+    input text                  enum.title.2.1                                          ${item_non_price_2_title}
+    input text                  enum.value.2.1                                          ${item_non_price_2_value}
+    click element               xpath=(//*[@id="enumAddAction"])[3]
+    sleep  1
+    input text                  enum.title.2.2                                          ${item_non_price_3_title}
+    input text                  enum.value.2.2                                          ${item_non_price_3_value}
+
+    # Переходимо на вкладку "Контактна особа"
+    Execute Javascript    angular.element("md-tab-item")[3].click()
+    sleep  3
+    input text            procuringEntityContactPointName                               ${contact_point_name}
+    input text            procuringEntityContactPointTelephone                          ${contact_point_phone}
+    input text            procuringEntityContactPointFax                                ${contact_point_fax}
+    input text            procuringEntityContactPointEmail                              ${contact_point_email}
+    input text            procurementMethodDetails                                      ${acceleration_mode}
+#    input text            submissionMethodDetails                                       quick(mode:fast-forward)
+    input text            mode                                                          test
+    sleep  3
+    click button  tender-apply
+    sleep  3
+    ${NewTenderUrl}=  Execute Javascript  return window.location.href
+    SET GLOBAL VARIABLE          ${NewTenderUrl}
+    sleep  4
+    wait until element is visible  ${Поле "Узагальнена назва закупівлі"}  30
+    click button                   ${Кнопка "Опублікувати"}
+    wait until element is visible  ${Кнопка "Так" у попап вікні}  60
+    click element                  ${Кнопка "Так" у попап вікні}
+    #Очікуємо появи повідомлення
+    wait until element is visible  xpath=.//div[@class='growl-container growl-fixed top-right']  120
+    sleep  5
+    ${localID}=    get_local_id_from_url        ${NewTenderUrl}
+    ${hrefToTender}=    Evaluate    "/dashboard/tender-drafts/" + str(${localID})
+    Wait Until Page Contains Element    xpath=//a[@href="${hrefToTender}"]    30
+    Go to  ${NewTenderUrl}
+	Wait Until Page Contains Element  id=tenderUID    100
+	Wait Until Page Contains Element  id=tenderID     100
+    ${tender_id}=  Get Text  xpath=//a[@id='tenderUID']
+    log to console  *
+    log to console  ${tender_id}
+    log to console  *
+    ${TENDER_UA}=  Get Text  id=tenderID
+    set global variable  ${TENDER_UA}
+    ${ViewTenderUrl}=  assemble_viewtender_url  ${NewTenderUrl}  ${tender_id}
+	SET GLOBAL VARIABLE                         ${ViewTenderUrl}
 
 Створити тендер aboveThresholdEU
     [Arguments]  @{ARGUMENTS}
@@ -105,7 +397,8 @@ Login
     ${lot_title}=                         Get From Dictionary             ${lots[0]}                                  title
     set global variable  ${lot_title}
     ${lot_title_en}=                      Get From Dictionary             ${lots[0]}                                  title_en
-    ${lot_amount}=                        adapt_numbers                   ${ARGUMENTS[1].data.lots[0].value.amount}
+#    ${lot_amount}=                        adapt_numbers                   ${ARGUMENTS[1].data.lots[0].value.amount}
+    ${lot_amount}=                        add_second_sign_after_point     ${ARGUMENTS[1].data.lots[0].value.amount}
     ${lot_amount_str}=                    convert to string               ${lot_amount}
     ${lot_minimal_step_amount}=           adapt_numbers                   ${lots[0].minimalStep.amount}
     ${lot_minimal_step_amount_str}=       convert to string               ${lot_minimal_step_amount}
@@ -236,7 +529,8 @@ Login
     input text      ${Поле "Узагальнена назва лоту"}                                    ${lot_title}
     input text      id=lotTitleEn.0                                                     ${lot_title_en}
     #заповнюємо поле "Очікувана вартість закупівлі"
-    input text      amount-lot-value.0                                                  ${lot_amount_str}
+#    input text      amount-lot-value.0                                                  ${lot_amount_str}
+    input text      amount-lot-value.0                                                  ${lot_amount}
     sleep  1
     #Заповнюємо поле "Примітки"
     input text      lotDescription-0                                                    ${lot_description}
@@ -816,6 +1110,7 @@ Login
   ...      ${ARGUMENTS[2]} ==  ${TENDER}
   run keyword if  '${TENDER_TYPE}' == 'negotiation'         Завантажити документ процедури negotiation        @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'    Завантажити документ процедури aboveThresholdEU   @{ARGUMENTS}
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'    Завантажити документ процедури aboveThresholdEU   @{ARGUMENTS}
 
 Завантажити документ процедури negotiation
   [Arguments]  @{ARGUMENTS}
@@ -856,12 +1151,10 @@ Login
   # Кнопка "Застосувати"
   sleep    3s
   Execute Javascript    $("#tender-apply").click()
-
   # Кнопка "Опублікувати"
   Page should contain element      id=tender-publish
   Wait Until Element Is Enabled    id=tender-publish
   Click Button    id=tender-publish
-
   # Кнопка "Так"
   Wait Until Page Contains Element    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]    20
   Click Button    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]
@@ -961,9 +1254,10 @@ Login
   [Documentation]
   ...      ${ARGUMENTS[0]} ==  username
   ...      ${ARGUMENTS[1]} ==  ${TENDER}
-  #натискаємо кнопку пошук (для сценарію complaints)
+  #натискаємо кнопку пошук (для сценарію complaints, aboveThresholdEU, aboveThresholdUA)
   run keyword if  '${TENDER_TYPE}' == 'complaints'        click element  xpath=(.//span[@class='ng-binding ng-scope'])[2]
   run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'  click element  xpath=(.//span[@class='ng-binding ng-scope'])[2]
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'  click element  xpath=(.//span[@class='ng-binding ng-scope'])[2]
   sleep  5
   # Кнопка  "Розширений пошук"
   Click Button    xpath=//tender-search-panel//div[@class='advanced-search-control']//button[contains(@ng-click, 'advancedSearchHidden')]
@@ -988,6 +1282,7 @@ Login
   run keyword if  '${TENDER_TYPE}' == 'complaints'        Отримати інформацію із тендера для скарг                    @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'negotiation'       Отримати інформацію із тендера для переговорної процедури   @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'  Отримати інформацію із тендера для openEU                   @{ARGUMENTS}
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'  Отримати інформацію із тендера для openEU                   @{ARGUMENTS}
   [return]  ${return_value}
 
 
@@ -1006,7 +1301,7 @@ Login
   ...      ${ARGUMENTS[0]} ==  ${username}
   ...      ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
   ...      ${ARGUMENTS[2]} ==  ${field}
-  ${return_value}=  run keyword  Отримати інформацію про ${ARGUMENTS[2]}
+  ${return_value}=  run keyword  Отримати інформацію про переговорний ${ARGUMENTS[2]}
   set global variable  ${return_value}
 
 Отримати інформацію із тендера для скарг
@@ -1023,7 +1318,7 @@ Login
   log to console  *
   set global variable  ${return_value}
 
-Отримати інформацію про title
+Отримати інформацію про переговорний title
 #Відображення заголовку переговорної процедури
   sleep  10
   ${return_value}=    Execute Javascript            return angular.element("#robotStatus").scope().data.title
@@ -1036,52 +1331,58 @@ Login
   ${count}=  convert to integer    3
   set global variable  ${count}
 
-Отримати інформацію про tenderId
+Отримати інформацію про переговорний tenderId
 #Відображення ідентифікатора переговорної процедури
     wait until element is visible  id=tenderID  20
     ${return_value}=    Get Text   id=tenderID
     [return]    ${return_value}
 
-Отримати інформацію про description
+Отримати інформацію про переговорний description
 #Відображення опису переговорної процедури
     wait until element is visible  xpath=.//*[@dataanchor='tenderView']//*[@dataanchor='description']  20
 	${return_value}=    Get Text   xpath=.//*[@dataanchor='tenderView']//*[@dataanchor='description']
     [return]  ${return_value}
 
-Отримати інформацію про causeDescription
+Отримати інформацію про переговорний causeDescription
 #Відображення підстави вибору переговорної процедури
     wait until element is visible  id=causeDescription  20
 	${return_value}=    Get Text   id=causeDescription
     [return]  ${return_value}
 
-Отримати інформацію про cause
+Отримати інформацію про переговорний cause
 #Відображення обгрунтування причини вибору переговорної процедури
     wait until element is visible  id=cause  20
 	${return_value}=    get value  id=cause
     [return]  ${return_value}
 
-Отримати інформацію про value.amount
+Отримати інформацію про переговорний value.amount
 #Відображення бюджету переговорної процедури
     wait until element is visible  xpath=(.//*[@dataanchor='value'])[1]  20
 	${return_value}=     Get Text  xpath=(.//*[@dataanchor='value'])[1]
+	log to console  *
+	log to console  Get Text ${return_value}
 	${return_value}=    get_numberic_part    ${return_value}
-	${return_value}=    Convert To Number    ${return_value}
+	log to console  get_numberic_part ${return_value}
+#	${return_value}=    Convert To Number    ${return_value}
+	${return_value}=    adapt_numbers2    ${return_value}
+	log to console  adapt_numbers2  ${return_value}
+#	${return_value}=    adapt_numbers    ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про value.currency
+Отримати інформацію про переговорний value.currency
 #Відображення валюти переговорної процедури
     wait until element is visible  xpath=.//*[@dataanchor='value.currency']  20
 	${return_value}=     Get Text  xpath=.//*[@dataanchor='value.currency']
     [return]  ${return_value}
 
-Отримати інформацію про value.valueAddedTaxIncluded
+Отримати інформацію про переговорний value.valueAddedTaxIncluded
 #Відображення врахованого податку в бюджет переговорної процедури
     wait until element is visible  xpath=.//*[@dataanchor='tenderView']//*[@dataanchor='value.valueAddedTaxIncluded']  20
     ${tax}=              Get Text  xpath=.//*[@dataanchor='tenderView']//*[@dataanchor='value.valueAddedTaxIncluded']
     ${return_value}=    tax adapt  ${tax}
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.address.countryName
+Отримати інформацію про переговорний procuringEntity.address.countryName
 #Відображення країни замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]
     ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
@@ -1089,7 +1390,7 @@ Login
     ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.address.locality
+Отримати інформацію про переговорний procuringEntity.address.locality
 #Відображення населеного пункту замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
     ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
@@ -1097,7 +1398,7 @@ Login
     ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.address.postalCode
+Отримати інформацію про переговорний procuringEntity.address.postalCode
 #Відображення поштового коду замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
     ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
@@ -1105,7 +1406,7 @@ Login
     ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.address.region
+Отримати інформацію про переговорний procuringEntity.address.region
 #Відображення області замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
     ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
@@ -1113,7 +1414,7 @@ Login
     ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.address.streetAddress
+Отримати інформацію про переговорний procuringEntity.address.streetAddress
 #Відображення вулиці замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
     ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
@@ -1121,98 +1422,98 @@ Login
     ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.contactPoint.name
+Отримати інформацію про переговорний procuringEntity.contactPoint.name
 #Відображення контактного імені замовника переговорної процедури
     wait until element is visible  xpath=.//div[@class='field-value ng-binding flex']  20
 	${return_value}=     Get Text  xpath=.//div[@class='field-value ng-binding flex']
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.contactPoint.telephone
+Отримати інформацію про переговорний procuringEntity.contactPoint.telephone
 #Відображення контактного телефону замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='field-value flex'])[1]  20
 	${return_value}=     Get Text  xpath=(.//div[@class='field-value flex'])[1]
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.contactPoint.url
+Отримати інформацію про переговорний procuringEntity.contactPoint.url
 #Відображення сайту замовника переговорної процедури
     wait until element is visible  xpath=.//div[@class='horisontal-centering']  20
 	${return_value}=     Get Text  xpath=.//div[@class='horisontal-centering']
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.identifier.legalName
+Отримати інформацію про переговорний procuringEntity.identifier.legalName
 #Відображення офіційного імені замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='sub-text-block'])[1]  20
 	${return_value}=     Get Text  xpath=(.//div[@class='sub-text-block'])[1]
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.identifier.id
+Отримати інформацію про переговорний procuringEntity.identifier.id
 #Відображення ідентифікатора замовника переговорної процедури
     wait until element is visible  xpath=(.//div[@class='horisontal-centering ng-binding'])[2]  20
 	${return_value}=     Get Text  xpath=(.//div[@class='horisontal-centering ng-binding'])[2]
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.name
+Отримати інформацію про переговорний procuringEntity.name
 #Відображення імені замовника переговорної процедури
     wait until element is visible  xpath=.//div[@class='align-text-at-center flex-none']  20
 	${return_value}=     Get Text  xpath=.//div[@class='align-text-at-center flex-none']
     [return]  ${return_value}
 
-Отримати інформацію про documents[0].title
+Отримати інформацію про переговорний documents[0].title
     wait until element is visible  xpath=(.//button[@tender-id])[1]  20
     click element                  xpath=(.//button[@tender-id])[1]
     sleep  3
 	${return_value}=  Get Text     xpath=.//div[@class='document-title-label']
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].documents[0].title
+Отримати інформацію про переговорний awards[0].documents[0].title
     wait until element is visible  xpath=(.//button[@tender-id])[2]  20
     click element                  xpath=(.//button[@tender-id])[2]
     sleep  3
 	${return_value}=  Get Text     xpath=.//div[@class='document-title-label']
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].status
+Отримати інформацію про переговорний awards[0].status
     wait until element is visible  xpath=(.//td[@class='ng-binding'])[3]  20
 	${return_value}=  Get Text     xpath=(.//td[@class='ng-binding'])[3]
     ${return_value}=  participant status  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].address.countryName
+Отримати інформацію про переговорний awards[0].suppliers[0].address.countryName
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[3]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[3]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].address.locality
+Отримати інформацію про переговорний awards[0].suppliers[0].address.locality
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[4]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[4]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].address.postalCode
+Отримати інформацію про переговорний awards[0].suppliers[0].address.postalCode
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[5]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[5]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].address.region
+Отримати інформацію про переговорний awards[0].suppliers[0].address.region
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[6]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[6]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].address.streetAddress
+Отримати інформацію про переговорний awards[0].suppliers[0].address.streetAddress
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[7]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[7]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про procuringEntity.identifier.scheme
+Отримати інформацію про переговорний procuringEntity.identifier.scheme
 #Відображення схеми ідентифікації замовника переговорної процедури
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=.//div[@id='OwnerScheme']  20
@@ -1220,71 +1521,71 @@ Login
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].contactPoint.telephone
+Отримати інформацію про переговорний awards[0].suppliers[0].contactPoint.telephone
     click element  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//a[@rel='nofollow'])[5]  20
     ${return_value}=  get element attribute  xpath=(.//a[@rel='nofollow'])[5]@textContent
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].contactPoint.name
+Отримати інформацію про переговорний awards[0].suppliers[0].contactPoint.name
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[2]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[2]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].contactPoint.email
+Отримати інформацію про переговорний awards[0].suppliers[0].contactPoint.email
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//a[@rel='nofollow'])[7]  20
     ${return_value}=  get element attribute  xpath=(.//a[@rel='nofollow'])[7]@textContent
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].identifier.scheme
+Отримати інформацію про переговорний awards[0].suppliers[0].identifier.scheme
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[8]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[8]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].identifier.legalName
+Отримати інформацію про переговорний awards[0].suppliers[0].identifier.legalName
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[9]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[9]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].identifier.id
+Отримати інформацію про переговорний awards[0].suppliers[0].identifier.id
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex-20'])  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex-20'])@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].suppliers[0].name
+Отримати інформацію про переговорний awards[0].suppliers[0].name
     click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
     wait until element is visible  xpath=.//div[@class='horisontal-centering ng-binding flex']  20
     ${return_value}=  get element attribute  xpath=.//div[@class='horisontal-centering ng-binding flex']@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].value.valueAddedTaxIncluded
+Отримати інформацію про переговорний awards[0].value.valueAddedTaxIncluded
     wait until element is visible  xpath=(.//span[@dataanchor='value.valueAddedTaxIncluded'])[2]  20
     ${value}=  get text            xpath=(.//span[@dataanchor='value.valueAddedTaxIncluded'])[2]
     ${return_value}=  tax_adapt  ${value}
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].value.currency
+Отримати інформацію про переговорний awards[0].value.currency
     wait until element is visible  xpath=(.//span[@dataanchor='value.currency'])[2]  20
     ${return_value}=     get text  xpath=(.//span[@dataanchor='value.currency'])[2]
     [return]  ${return_value}
 
-Отримати інформацію про awards[0].value.amount
+Отримати інформацію про переговорний awards[0].value.amount
     wait until element is visible  xpath=.//span[@dataanchor='value.amount']  20
     ${value}=            get text  xpath=.//span[@dataanchor='value.amount']
     ${return_value}=  convert to integer  ${value}
     [return]  ${return_value}
 
-Отримати інформацію про contracts[0].status
+Отримати інформацію про переговорний contracts[0].status
     wait until element is visible  xpath=.//span[@id='contract-status']  20
 	${return_value}=  get value  xpath=.//span[@id='contract-status']
     [return]  ${return_value}
@@ -1298,6 +1599,7 @@ Login
     ...      ${ARGUMENTS[3]} ==  ${field_name}
     run keyword if  '${TENDER_TYPE}' == 'negotiation'       Отримати інформацію із предмета для переговорної процедури   @{ARGUMENTS}
     run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'  Отримати інформацію із предмета для openEU                   @{ARGUMENTS}
+    run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'  Отримати інформацію із предмета для openEU                   @{ARGUMENTS}
     [return]  ${return_value}
 
 Отримати інформацію із предмета для переговорної процедури
@@ -1872,9 +2174,12 @@ Login
   ...      ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
   ...      ${ARGUMENTS[2]} ==  ${object_id}
   ...      ${ARGUMENTS[3]} ==  ${field_name}
+  log to console  *
+  log to console  починаємо "Отримати інформацію із лоту"
   run keyword if  '${TENDER_TYPE}' == 'complaints'        Отримати інформацію із лоту для скарг      @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'  Отримати інформацію із лоту для openEU     @{ARGUMENTS}
-   [return]  ${return_value}
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'  Отримати інформацію із лоту для openEU     @{ARGUMENTS}
+  [return]  ${return_value}
 
 Отримати інформацію із лоту для скарг
   [Arguments]  @{ARGUMENTS}
@@ -1897,6 +2202,8 @@ Login
   ...      ${ARGUMENTS[3]} ==  ${field_name}
   go to  ${ViewTenderUrl}
   sleep  10
+  log to console  *
+  log to console  починаємо "Отримати інформацію із лоту для openEU "
   run keyword if  '${ARGUMENTS[3]}' == 'title'                                  Отримати інформацію про лот title                  @{ARGUMENTS}
   run keyword if  '${ARGUMENTS[3]}' == 'value.amount'                           Отримати інформацію про лот value.amount
   run keyword if  '${ARGUMENTS[3]}' == 'minimalStep.amount'                     Отримати інформацію про лот minimalStep.amount
@@ -1907,12 +2214,16 @@ Login
   run keyword if  '${ARGUMENTS[3]}' == 'minimalStep.valueAddedTaxIncluded'      Отримати інформацію про лот minimalStep.valueAddedTaxIncluded
 
 
-
-
-
-
-
-
+#Отримати інформацію про тендер lots[0].value.amount
+##Відображення бюджету лотів
+#  log to console  *
+#  ${return_value}=          get text                xpath=.//span[@dataanchor='amount']
+#  log to console  get text  ${return_value}
+#  ${return_value}=          get_numberic_part       ${return_value}
+#  log to console  get_numberic_part  ${return_value}
+#  ${return_value}=    adapt_numbers2   ${return_value}
+#  log to console  adapt_numbers2  ${return_value}
+#  [return]  ${return_value}
 
 Підтвердити вирішення вимоги про виправлення умов закупівлі
   [Arguments]  @{ARGUMENTS}
@@ -2130,6 +2441,7 @@ Login
 
   run keyword if  '${TENDER_TYPE}' == 'complaints'                  Подати цінову пропозицію complaints         @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'            Подати цінову пропозицію aboveThresholdEU   @{ARGUMENTS}
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'            Подати цінову пропозицію aboveThresholdEU   @{ARGUMENTS}
 
 Подати цінову пропозицію complaints
   [Arguments]  @{ARGUMENTS}
@@ -2176,10 +2488,6 @@ Login
     ${feature}=  convert to string  ${ARGUMENTS[4][0]}
     ${bid_amount}=        adapt_numbers            ${ARGUMENTS[2].data.lotValues[0].value.amount}
     ${bid_amount_str}=    convert to string        ${bid_amount}
-    log to console  *
-    log to console  ${bid_amount}
-    log to console  ${bid_amount_str}
-    log to console  *
     go to  ${ViewTenderUrl}
     wait until element is visible  xpath=.//span[@ng-if='data.status']  60
     sleep  5
@@ -2594,7 +2902,6 @@ Login
   ${feature_return_value}=    trim data               ${feature_return_value}
   set global variable  ${feature_return_value}
 
-
 Отримати інформацію про неціновий показник featureOf
 #Відображення відношення нецінових показників
   [Arguments]  @{ARGUMENTS}
@@ -2617,10 +2924,6 @@ Login
 #Відображення заголовку документації до тендера
   ${doc_counter}=  evaluate  ${doc_counter} + ${1}
   set global variable  ${doc_counter}
-#  focus           xpath=(.//button[@tender-id='control.tenderId'])[${doc_counter}]
-#  sleep  2
-#  click button    xpath=(.//button[@tender-id='control.tenderId'])[${doc_counter}]
-
   click button    xpath=(.//button[@tender-id='control.tenderId'])[1]
   sleep  5
   ${return_value}=    Get Text    xpath=(.//a[@ng-click='loadUrl(gr)'])[${doc_counter}]
@@ -2652,7 +2955,6 @@ Login
   ...      ${ARGUMENTS[2]} ==  ${doc_id}
   Go to    ${ViewTenderUrl}
   sleep  10
-#  click button    xpath=(.//button[@tender-id='control.tenderId'])[2]
   click button    xpath=(.//button[@tender-id='control.tenderId'])[1]
   sleep  5
   ${return_value}=    Get Text    xpath=(.//a[@ng-click='loadUrl(gr)'])[2]
@@ -2789,6 +3091,16 @@ Login
   ...      ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
   ...      ${ARGUMENTS[2]} ==  ${feature}
   ...      ${ARGUMENTS[3]} ==  ${lot_id}
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'            Додати неціновий показник на лот aboveThresholdEU   @{ARGUMENTS}
+  run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'            Додати неціновий показник на лот aboveThresholdUA   @{ARGUMENTS}
+
+Додати неціновий показник на лот aboveThresholdEU
+  [Arguments]  @{ARGUMENTS}
+  [Documentation]
+  ...      ${ARGUMENTS[0]} ==  ${tender_owner}
+  ...      ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
+  ...      ${ARGUMENTS[2]} ==  ${feature}
+  ...      ${ARGUMENTS[3]} ==  ${lot_id}
   #Нецінові крітерії лоту
   ${lot_features_title}=                Get From Dictionary             ${ARGUMENTS[2]}                              title
   ${lot_features_description} =         Get From Dictionary             ${ARGUMENTS[2]}                              description
@@ -2837,6 +3149,69 @@ Login
   Wait Until Page Contains Element    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]    20
   Click Button    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]
   sleep  10
+
+Додати неціновий показник на лот aboveThresholdUA
+  [Arguments]  @{ARGUMENTS}
+  [Documentation]
+  ...      ${ARGUMENTS[0]} ==  ${tender_owner}
+  ...      ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
+  ...      ${ARGUMENTS[2]} ==  ${feature}
+  ...      ${ARGUMENTS[3]} ==  ${lot_id}
+  #Нецінові крітерії лоту
+  ${lot_features_title}=                Get From Dictionary             ${ARGUMENTS[2]}                              title
+  ${lot_features_description} =         Get From Dictionary             ${ARGUMENTS[2]}                              description
+  ${lot_features_of}=                   Get From Dictionary             ${ARGUMENTS[2]}                              featureOf
+  ${lot_non_price_1_value}=             convert to number               ${ARGUMENTS[2].enum[0].value}
+  ${lot_non_price_1_value}=             percents                        ${lot_non_price_1_value}
+  ${lot_non_price_1_value}=             convert to string               ${lot_non_price_1_value}
+  ${lot_non_price_1_title}=             Get From Dictionary             ${ARGUMENTS[2].enum[0]}                      title
+  ${lot_non_price_2_value}=             convert to number               ${ARGUMENTS[2].enum[1].value}
+  ${lot_non_price_2_value}=             percents                        ${lot_non_price_2_value}
+  ${lot_non_price_2_value}=             convert to string               ${lot_non_price_2_value}
+  ${lot_non_price_2_title}=             Get From Dictionary             ${ARGUMENTS[2].enum[1]}                      title
+  ${lot_non_price_3_value}=             convert to number               ${ARGUMENTS[2].enum[2].value}
+  ${lot_non_price_3_value}=             percents                        ${lot_non_price_3_value}
+  ${lot_non_price_3_value}=             convert to string               ${lot_non_price_3_value}
+  ${lot_non_price_3_title}=             Get From Dictionary             ${ARGUMENTS[2].enum[2]}                      title
+  Go to               ${NewTenderUrl}
+  sleep  10
+  #Переходимо на вкладку "Інші крітерії оцінки"
+  Execute Javascript          angular.element("md-tab-item")[2].click()
+  sleep  3
+  click element               featureAddAction
+  sleep  1
+  input text                  xpath=(//*[@id="feature.title."])[5]                    ${lot_features_title}
+  input text                  xpath=(//*[@id="feature.description."])[5]              ${lot_features_description}
+  select from list by value   xpath=(//*[@id="feature.featureOf."])[5]                ${lot_features_of}
+  sleep  2
+  select from list by label   xpath=(//*[@id="feature.relatedItem."])[4]              ${lot_title}
+  sleep  2
+  click element               xpath=(//*[@id="enumAddAction"])[5]
+  sleep  1
+  input text                  enum.title.4.0                                          ${lot_non_price_1_title}
+  input text                  enum.value.4.0                                          ${lot_non_price_1_value}
+  click element               xpath=(//*[@id="enumAddAction"])[5]
+  sleep  1
+  input text                  enum.title.4.1                                          ${lot_non_price_2_title}
+  input text                  enum.value.4.1                                          ${lot_non_price_2_value}
+  click element               xpath=(//*[@id="enumAddAction"])[5]
+  sleep  1
+  input text                  enum.title.4.2                                          ${lot_non_price_3_title}
+  input text                  enum.value.4.2                                          ${lot_non_price_3_value}
+  # Кнопка "Опубліковати"
+  sleep  3
+  Click Button    id=tender-publish
+  # Кнопка "Так"
+  Wait Until Page Contains Element    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]    20
+  Click Button    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]
+  sleep  10
+
+
+
+
+
+
+
 
 Відповісти на запитання
 #Можливість відповісти на запитання на всі лоти
@@ -2910,6 +3285,12 @@ Login
 #Відображення опису анонімного запитання на всі лоти без відповіді
   ${question_value}=    get element attribute  xpath=.//div[@ng-if='question.answer']@textContent
   set global variable            ${question_value}
+
+#Отримати інформацію про answer запитання
+##Відображення опису анонімного запитання на всі лоти без відповіді
+#  sleep  10
+#  ${question_value}=    get element attribute  xpath=.//div[@ng-if='question.answer']/p@textContent
+#  set global variable            ${question_value}
 
 Завантажити документ у кваліфікацію
 #Можливість завантажити документ у кваліфікацію пропозиції першого
@@ -3012,6 +3393,7 @@ Login
   ${return_value}=  get value               id=lot-amount-0
   ${return_value}=  get numberic part       ${return_value}
   ${return_value}=  adapt_numbers2          ${return_value}
+  log to console  adapt_numbers2 ${return_value}
   [return]  ${return_value}
 
 Отримати інформацію із пропозиції про status
@@ -3052,6 +3434,15 @@ Login
     ...    ${ARGUMENTS[0]} ==  ${username}
     ...    ${ARGUMENTS[1]} ==  ${file_path}
     ...    ${ARGUMENTS[2]} ==  ${TENDER['TENDER_UAID']}
+    run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'            Завантажити документ в ставку aboveThresholdEU   @{ARGUMENTS}
+    run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'            Завантажити документ в ставку aboveThresholdUA   @{ARGUMENTS}
+
+Завантажити документ в ставку aboveThresholdEU
+  [Arguments]  @{ARGUMENTS}
+  [Documentation]
+  ...    ${ARGUMENTS[0]} ==  ${username}
+  ...    ${ARGUMENTS[1]} ==  ${file_path}
+  ...    ${ARGUMENTS[2]} ==  ${TENDER['TENDER_UAID']}
   go to  ${ViewTenderUrl}
   sleep  10
   ${bid_doc_type}=  convert to string  commercialProposal
@@ -3061,7 +3452,39 @@ Login
   sleep  5
   focus   xpath=.//span[@class='upper-case-block-label ng-binding']
   sleep  2
+  select from list by value     id=type-bid-documents                     ${bid_doc_type}
+  sleep  2
+  Choose file     id=file-bid-documents    ${ARGUMENTS[1]}
+  Sleep  10
+  # Кнопка "Додати пропозицію"
+  Click element    id=tender-update-bid
+  wait until element is visible  xpath=.//button[@ng-click='ok()']  60
+  click element                  xpath=.//button[@ng-click='ok()']
+  sleep  10
 
+Завантажити документ в ставку aboveThresholdUA
+  [Arguments]  @{ARGUMENTS}
+  [Documentation]
+  ...    ${ARGUMENTS[0]} ==  ${username}
+  ...    ${ARGUMENTS[1]} ==  ${file_path}
+  ...    ${ARGUMENTS[2]} ==  ${TENDER['TENDER_UAID']}
+  go to  ${ViewTenderUrl}
+  sleep  10
+  ${bid_doc_type}=  convert to string  commercialProposal
+  set global variable  ${bid_doc_type}
+  run keyword and ignore error  Отримати тип документу ставки  @{ARGUMENTS}
+  Wait Until Page Contains Element    xpath=(.//button[@ng-if='vm.allowEditBidDocuments'])[1]
+  focus                               xpath=(.//button[@ng-if='vm.allowEditBidDocuments'])[1]
+  sleep  5
+  focus                               xpath=(.//button[@ng-if='vm.allowEditBidDocuments'])[1]
+  sleep  5
+  Click element                       xpath=(.//button[@ng-if='vm.allowEditBidDocuments'])[1]
+  Sleep  5
+  focus  id=description-bid-documents
+  sleep  5
+  input text                    id=description-bid-documents              PLACEHOLDER
+  focus  id=type-bid-documents
+  sleep  5
   select from list by value     id=type-bid-documents                     ${bid_doc_type}
   sleep  2
   Choose file     id=file-bid-documents    ${ARGUMENTS[1]}
@@ -3137,12 +3560,16 @@ Login
   Sleep    10
   ${title}=        Get From Dictionary  ${ARGUMENTS[2].data}  title
   ${description}=  Get From Dictionary  ${ARGUMENTS[2].data}  description
-  Wait Until Page Contains Element   xpath=//ng-form[@name='questionForm'][1]//button[@ng-click='toggleView()']
+  Wait Until Page Contains Element   xpath=//ng-form[@name='questionForm'][1]//button[@ng-click='toggleView()']  30
+  focus  xpath=//ng-form[@name='questionForm'][1]//button[@ng-click='toggleView()']
+  sleep  3
   Click element     xpath=//ng-form[@name='questionForm'][1]//button[@ng-click='toggleView()']
   Sleep    5s
   input text       id=title          ${title}
   input text       id=description    ${description}
   Sleep    10
+  focus  xpath=//ng-form[@name='questionForm'][1]//button[@ng-click='createQuestion()']
+  sleep  5
   Click element     xpath=//ng-form[@name='questionForm'][1]//button[@ng-click='createQuestion()']
   Sleep    20
 
@@ -3226,7 +3653,62 @@ Login
 	${return_value}=    Convert To Number    ${return_value}
     [return]  ${return_value}
 
+Додати неціновий показник на предмет
+  [Arguments]  @{ARGUMENTS}
+  [Documentation]
+  ...      ${ARGUMENTS[0]} ==  ${tender_owner}
+  ...      ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
+  ...      ${ARGUMENTS[2]} ==  ${feature}
+  ...      ${ARGUMENTS[3]} ==  ${item_id}
 
+  ${item_features_title}=                Get From Dictionary             ${ARGUMENTS[2]}                              title
+  ${item_features_description} =         Get From Dictionary             ${ARGUMENTS[2]}                              description
+  ${item_features_of}=                   Get From Dictionary             ${ARGUMENTS[2]}                              featureOf
+  ${item_non_price_1_value}=             convert to number               ${ARGUMENTS[2].enum[0].value}
+  ${item_non_price_1_value}=             percents                        ${item_non_price_1_value}
+  ${item_non_price_1_value}=             convert to string               ${item_non_price_1_value}
+  ${item_non_price_1_title}=             Get From Dictionary             ${ARGUMENTS[2].enum[0]}                      title
+  ${item_non_price_2_value}=             convert to number               ${ARGUMENTS[2].enum[1].value}
+  ${item_non_price_2_value}=             percents                        ${item_non_price_2_value}
+  ${item_non_price_2_value}=             convert to string               ${item_non_price_2_value}
+  ${item_non_price_2_title}=             Get From Dictionary             ${ARGUMENTS[2].enum[1]}                      title
+  ${item_non_price_3_value}=             convert to number               ${ARGUMENTS[2].enum[2].value}
+  ${item_non_price_3_value}=             percents                        ${item_non_price_3_value}
+  ${item_non_price_3_value}=             convert to string               ${item_non_price_3_value}
+  ${item_non_price_3_title}=             Get From Dictionary             ${ARGUMENTS[2].enum[2]}                      title
+  Go to               ${NewTenderUrl}
+  log to console  ${ARGUMENTS[2]}
+  sleep  10
+  #Переходимо на вкладку "Інші крітерії оцінки"
+  Execute Javascript          angular.element("md-tab-item")[2].click()
+  sleep  3
+  click element               featureAddAction
+  sleep  1
+  input text                  xpath=(//*[@id="feature.title."])[4]                    ${item_features_title}
+  input text                  xpath=(//*[@id="feature.description."])[4]              ${item_features_description}
+  select from list by value   xpath=(//*[@id="feature.featureOf."])[4]                ${item_features_of}
+  sleep  2
+  select from list by label   xpath=(//*[@id="feature.relatedItem."])[3]              ${item_description}
+  sleep  2
+  click element               xpath=(//*[@id="enumAddAction"])[4]
+  sleep  1
+  input text                  enum.title.3.0                                          ${item_non_price_1_title}
+  input text                  enum.value.3.0                                          ${item_non_price_1_value}
+  click element               xpath=(//*[@id="enumAddAction"])[4]
+  sleep  1
+  input text                  enum.title.3.1                                          ${item_non_price_2_title}
+  input text                  enum.value.3.1                                          ${item_non_price_2_value}
+  click element               xpath=(//*[@id="enumAddAction"])[4]
+  sleep  1
+  input text                  enum.title.3.2                                          ${item_non_price_3_title}
+  input text                  enum.value.3.2                                          ${item_non_price_3_value}
+  # Кнопка "Опубліковати"
+  sleep  3
+  Click Button    id=tender-publish
+  # Кнопка "Так"
+  Wait Until Page Contains Element    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]    20
+  Click Button    xpath=//div[@class="modal-dialog "]//button[@ng-click="ok()"]
+  sleep  10
 
 
 

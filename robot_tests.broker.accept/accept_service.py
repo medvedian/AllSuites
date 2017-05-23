@@ -78,7 +78,7 @@ def adapt_data(tender_data):
     tender_data.data.procuringEntity['address']['region'] = u"місто Київ"
     tender_data.data.procuringEntity['address']['streetAddress'] = u"accOwner"
     tender_data.data.procuringEntity['address']['streetAddress'] = u"accOwner"
-    tender_data.data.lots[0].value['amount'] = repr(tender_data.data.lots[0].value['amount'])
+    # tender_data.data.lots[0].value['amount'] = repr(tender_data.data.lots[0].value['amount'])
     return tender_data
 
 def tax_adapt(tax):
@@ -144,6 +144,12 @@ def convert_dt(somedate):
 
 def adapt_numbers(data):
     return repr(data)
+
+def add_second_sign_after_point(amount):
+    amount = str(repr(amount))
+    if '.' in amount and len(amount.split('.')[1]) == 1:
+        amount += '0'
+    return amount
 
 def adapt_numbers2(data):
     return float(data)
