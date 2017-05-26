@@ -76,6 +76,13 @@ Login
   [Arguments]  ${tender_data}
   ${tender_data}=       adapt_data         ${tender_data}
   set global variable  ${tender_data}
+  run keyword if  '${TENDER_TYPE}' == 'negotiation'            Підготувати тендер дату negotiation   ${tender_data}
+  set global variable  ${tender_data}
+
+Підготувати тендер дату negotiation
+  [Arguments]  ${tender_data}
+  ${tender_data}=       adapt_data_negotiation         ${tender_data}
+  set global variable  ${tender_data}
 
 Створити тендер
   [Arguments]  @{ARGUMENTS}
@@ -140,7 +147,7 @@ Login
     ${delivery_endDate}=                  Get From Dictionary             ${items[0].deliveryDate}                    endDate
     #конвертація дат та часу
     ${tenderPeriod_endDate_str}=          convert_datetime_to_new         ${tenderPeriod_endDate}
-	${tenderPeriod_endDate_time}=         plus_1_min    ${tenderPeriod_endDate}
+	${tenderPeriod_endDate_time}=         plus_20_min    ${tenderPeriod_endDate}
     ${delivery_StartDate_str}=            convert_datetime_to_new         ${delivery_startDate}
 	${delivery_StartDate_time}=           convert_datetime_to_new_time    ${delivery_startDate}
     ${delivery_endDate_str}=              convert_datetime_to_new         ${delivery_endDate}
@@ -1278,7 +1285,7 @@ Login
   ...      ${ARGUMENTS[1]} ==  ${TENDER_UAID}
   ...      ${ARGUMENTS[2]} ==  field
   go to  ${ViewTenderUrl}
-  sleep  5
+  sleep  10
   run keyword if  '${TENDER_TYPE}' == 'complaints'        Отримати інформацію із тендера для скарг                    @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'negotiation'       Отримати інформацію із тендера для переговорної процедури   @{ARGUMENTS}
   run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'  Отримати інформацію із тендера для openEU                   @{ARGUMENTS}
@@ -1301,6 +1308,8 @@ Login
   ...      ${ARGUMENTS[0]} ==  ${username}
   ...      ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
   ...      ${ARGUMENTS[2]} ==  ${field}
+  click element  xpath=(.//div[@class='horisontal-centering ng-binding'])[10]
+  sleep  2
   ${return_value}=  run keyword  Отримати інформацію про переговорний ${ARGUMENTS[2]}
   set global variable  ${return_value}
 
@@ -1359,14 +1368,8 @@ Login
 #Відображення бюджету переговорної процедури
     wait until element is visible  xpath=(.//*[@dataanchor='value'])[1]  20
 	${return_value}=     Get Text  xpath=(.//*[@dataanchor='value'])[1]
-	log to console  *
-	log to console  Get Text ${return_value}
 	${return_value}=    get_numberic_part    ${return_value}
-	log to console  get_numberic_part ${return_value}
-#	${return_value}=    Convert To Number    ${return_value}
-	${return_value}=    adapt_numbers2    ${return_value}
-	log to console  adapt_numbers2  ${return_value}
-#	${return_value}=    adapt_numbers    ${return_value}
+	${return_value}=    Convert To Number    ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний value.currency
@@ -1384,42 +1387,36 @@ Login
 
 Отримати інформацію про переговорний procuringEntity.address.countryName
 #Відображення країни замовника переговорної процедури
-    wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]
-    ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
-    ${value}=  convert to integer  1
-    ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
+    wait until element is visible  id=country-name  20
+    ${temp_value} =      get text  id=country-name
+    ${return_value}=  cut_string  ${temp_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний procuringEntity.address.locality
 #Відображення населеного пункту замовника переговорної процедури
-    wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
-    ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
-    ${value}=  convert to integer  3
-    ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
+    wait until element is visible  id=locality  20
+    ${temp_value} =      get text  id=locality
+    ${return_value}=  cut_string  ${temp_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний procuringEntity.address.postalCode
 #Відображення поштового коду замовника переговорної процедури
-    wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
-    ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
-    ${value}=  convert to integer  0
-    ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
+    wait until element is visible  id=postal-code  20
+    ${temp_value} =      get text  id=postal-code
+    ${return_value}=  cut_string  ${temp_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний procuringEntity.address.region
 #Відображення області замовника переговорної процедури
-    wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
-    ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
-    ${value}=  convert to integer  2
-    ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
+    wait until element is visible  xpath=.//span[@ng-if='::organizationData.address.region']  20
+    ${temp_value} =      get text  xpath=.//span[@ng-if='::organizationData.address.region']
+    ${return_value}=  cut_string  ${temp_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний procuringEntity.address.streetAddress
 #Відображення вулиці замовника переговорної процедури
-    wait until element is visible  xpath=(.//div[@class='sub-text-block']/div)[2]  20
-    ${temp_value} =      get text  xpath=(.//div[@class='sub-text-block']/div)[2]
-    ${value}=  convert to integer  4
-    ${return_value}=  parse_address_for_viewer  ${temp_value}  ${value}
+    wait until element is visible  id=street-address  20
+    ${return_value} =      get text  id=street-address
     [return]  ${return_value}
 
 Отримати інформацію про переговорний procuringEntity.contactPoint.name
@@ -1456,18 +1453,34 @@ Login
 #Відображення імені замовника переговорної процедури
     wait until element is visible  xpath=.//div[@class='align-text-at-center flex-none']  20
 	${return_value}=     Get Text  xpath=.//div[@class='align-text-at-center flex-none']
+
+	${x}=  convert to integer  0
+	set global variable  ${x}
+
     [return]  ${return_value}
 
 Отримати інформацію про переговорний documents[0].title
-    wait until element is visible  xpath=(.//button[@tender-id])[1]  20
-    click element                  xpath=(.//button[@tender-id])[1]
+#    wait until element is visible  xpath=(.//button[@tender-id='control.tenderId'])[1]  20
+#    focus  xpath=(.//button[@tender-id='control.tenderId'])[1]
+#    sleep  3
+#    click element                  xpath=(.//button[@tender-id='control.tenderId'])[1]
+#    sleep  3
+
+    sleep  5
+    execute javascript      angular.element("div#tender-documents button").click()
     sleep  3
+
 	${return_value}=  Get Text     xpath=.//div[@class='document-title-label']
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].documents[0].title
-    wait until element is visible  xpath=(.//button[@tender-id])[2]  20
-    click element                  xpath=(.//button[@tender-id])[2]
+#    wait until element is visible  xpath=(.//button[@tender-id='control.tenderId'])[2]  20
+#    focus  xpath=(.//button[@tender-id='control.tenderId'])[2]
+#    sleep  3
+#    click element                  xpath=(.//button[@tender-id='control.tenderId'])[2]
+
+    sleep  5
+    execute javascript  angular.element("div#qualification-documents button").click()
     sleep  3
 	${return_value}=  Get Text     xpath=.//div[@class='document-title-label']
     [return]  ${return_value}
@@ -1479,91 +1492,93 @@ Login
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].address.countryName
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[3]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[3]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[3]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].address.locality
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[4]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[4]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[4]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].address.postalCode
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[5]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[5]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[5]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].address.region
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[6]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[6]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[6]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].address.streetAddress
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[7]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[7]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[7]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний procuringEntity.identifier.scheme
 #Відображення схеми ідентифікації замовника переговорної процедури
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=.//div[@id='OwnerScheme']  20
+#    focus  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    sleep  2
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=.//div[@id='OwnerScheme']  20
     ${return_value}=  get element attribute  xpath=.//div[@id='OwnerScheme']@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].contactPoint.telephone
-    click element  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//a[@rel='nofollow'])[5]  20
+#    click element  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//a[@rel='nofollow'])[5]  20
     ${return_value}=  get element attribute  xpath=(.//a[@rel='nofollow'])[5]@textContent
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].contactPoint.name
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[2]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[2]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[2]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].contactPoint.email
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//a[@rel='nofollow'])[7]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//a[@rel='nofollow'])[7]  20
     ${return_value}=  get element attribute  xpath=(.//a[@rel='nofollow'])[7]@textContent
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].identifier.scheme
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[8]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[8]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[8]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].identifier.legalName
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[9]  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex'])[9]  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex'])[9]@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].identifier.id
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex-20'])  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=(.//div[@class='field-value ng-binding flex-20'])  20
     ${return_value}=  get element attribute  xpath=(.//div[@class='field-value ng-binding flex-20'])@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
 
 Отримати інформацію про переговорний awards[0].suppliers[0].name
-    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
-    wait until element is visible  xpath=.//div[@class='horisontal-centering ng-binding flex']  20
+#    click element                  xpath=(.//div[@class='horisontal-centering ng-binding'])[11]
+#    wait until element is visible  xpath=.//div[@class='horisontal-centering ng-binding flex']  20
     ${return_value}=  get element attribute  xpath=.//div[@class='horisontal-centering ng-binding flex']@textContent
     ${return_value}=  trim data  ${return_value}
     [return]  ${return_value}
@@ -1597,9 +1612,14 @@ Login
     ...      ${ARGUMENTS[1]} ==  ${TENDER_UAID}
     ...      ${ARGUMENTS[2]} ==  ${object_id}
     ...      ${ARGUMENTS[3]} ==  ${field_name}
+#    log to console  *
+#    log to console  Починаємо "Отримати інформацію із предмету"
+#    log to console  *
     run keyword if  '${TENDER_TYPE}' == 'negotiation'       Отримати інформацію із предмета для переговорної процедури   @{ARGUMENTS}
     run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'  Отримати інформацію із предмета для openEU                   @{ARGUMENTS}
     run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'  Отримати інформацію із предмета для openEU                   @{ARGUMENTS}
+#    log to console  Завершили "Отримати інформацію із предмету"
+#    log to console  *
     [return]  ${return_value}
 
 Отримати інформацію із предмета для переговорної процедури
@@ -1611,26 +1631,24 @@ Login
     ...      ${ARGUMENTS[3]} ==  ${field_name}
     go to  ${ViewTenderUrl}
     sleep  10
-    click element  xpath=(//span[starts-with(@class,'glyphicon')])[11]
-    sleep  1
-    click element  xpath=(//span[starts-with(@class,'glyphicon')])[12]
-    sleep  1
-    run keyword if  '${field_name}' == 'description'                                Отримати інформацію про items[0].description
-    run keyword if  '${field_name}' == 'additionalClassifications[0].description'   Отримати інформацію про items[0].additionalClassifications[0].description
-    run keyword if  '${field_name}' == 'additionalClassifications[0].id'            Отримати інформацію про items[0].additionalClassifications[0].id
-    run keyword if  '${field_name}' == 'additionalClassifications[0].scheme'        Отримати інформацію про items[0].additionalClassifications[0].scheme
-    run keyword if  '${field_name}' == 'classification.scheme'                      Отримати інформацію про items[0].classification.scheme
-    run keyword if  '${field_name}' == 'classification.id'                          Отримати інформацію про items[0].classification.id
-    run keyword if  '${field_name}' == 'classification.description'                 Отримати інформацію про items[0].classification.description
-    run keyword if  '${field_name}' == 'quantity'                                   Отримати інформацію про items[0].quantity
-    run keyword if  '${field_name}' == 'unit.name'                                  Отримати інформацію про items[0].unit.name
-    run keyword if  '${field_name}' == 'unit.code'                                  Отримати інформацію про items[0].unit.code
-    run keyword if  '${field_name}' == 'deliveryDate.endDate'                       Отримати інформацію про items[0].deliveryDate.endDate
-    run keyword if  '${field_name}' == 'deliveryAddress.countryName'                Отримати інформацію про items[0].deliveryAddress.countryName
-    run keyword if  '${field_name}' == 'deliveryAddress.postalCode'                 Отримати інформацію про items[0].deliveryAddress.postalCode
-    run keyword if  '${field_name}' == 'deliveryAddress.region'                     Отримати інформацію про items[0].deliveryAddress.region
-    run keyword if  '${field_name}' == 'deliveryAddress.locality'                   Отримати інформацію про items[0].deliveryAddress.locality
-    run keyword if  '${field_name}' == 'deliveryAddress.streetAddress'              Отримати інформацію про items[0].deliveryAddress.streetAddress
+    run keyword if  '${ARGUMENTS[3]}' == 'description'                                Отримати інформацію про items[${x}].description
+    run keyword if  '${ARGUMENTS[3]}' == 'additionalClassifications[0].description'   Отримати інформацію про items[${x}].additionalClassifications[0].description
+    run keyword if  '${ARGUMENTS[3]}' == 'additionalClassifications[0].id'            Отримати інформацію про items[${x}].additionalClassifications[0].id
+    run keyword if  '${ARGUMENTS[3]}' == 'additionalClassifications[0].scheme'        Отримати інформацію про items[${x}].additionalClassifications[0].scheme
+    run keyword if  '${ARGUMENTS[3]}' == 'classification.scheme'                      Отримати інформацію про items[${x}].classification.scheme
+    run keyword if  '${ARGUMENTS[3]}' == 'classification.id'                          Отримати інформацію про items[${x}].classification.id
+    run keyword if  '${ARGUMENTS[3]}' == 'classification.description'                 Отримати інформацію про items[${x}].classification.description
+    run keyword if  '${ARGUMENTS[3]}' == 'quantity'                                   Отримати інформацію про items[${x}].quantity
+    run keyword if  '${ARGUMENTS[3]}' == 'unit.name'                                  Отримати інформацію про items[${x}].unit.name
+    run keyword if  '${ARGUMENTS[3]}' == 'unit.code'                                  Отримати інформацію про items[${x}].unit.code
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryDate.endDate'                       Отримати інформацію про items[${x}].deliveryDate.endDate
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryAddress.countryName'                Отримати інформацію про items[${x}].deliveryAddress.countryName
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryAddress.postalCode'                 Отримати інформацію про items[${x}].deliveryAddress.postalCode
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryAddress.region'                     Отримати інформацію про items[${x}].deliveryAddress.region
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryAddress.locality'                   Отримати інформацію про items[${x}].deliveryAddress.locality
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryAddress.streetAddress'              Отримати інформацію про items[${x}].deliveryAddress.streetAddress
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryLocation.latitude'                  Отримати інформацію про items[${x}].deliveryLocation.latitude
+    run keyword if  '${ARGUMENTS[3]}' == 'deliveryLocation.longitude'                  Отримати інформацію про items[${x}].deliveryLocation.longitude
 
 Отримати інформацію із предмета для openEU
   [Arguments]  @{ARGUMENTS}
@@ -1662,78 +1680,101 @@ Login
 #Відображення опису номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@convert-line-break])[1]@textContent
     set global variable  ${return_value}
+    Збільшити х
+
+Збільшити х
+    ${x}=  convert to integer  1
+    set global variable  ${x}
+
+Зменшити х
+    ${x}=  convert to integer  0
+    set global variable  ${x}
 
 Отримати інформацію про items[1].description
 #Відображення опису номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@convert-line-break])[2]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].additionalClassifications[0].description
 #Відображення опису основної/додаткової класифікації номенклатур пе
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='description'])[2]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].additionalClassifications[0].description
 #Відображення опису основної/додаткової класифікації номенклатур пе
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='description'])[4]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].additionalClassifications[0].id
 #Відображення ідентифікатора основної/додаткової класифікації номен
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='value'])[2]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].additionalClassifications[0].id
 #Відображення ідентифікатора основної/додаткової класифікації номен
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='value'])[4]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].additionalClassifications[0].scheme
 #Відображення схеми основної/додаткової класифікації номенклатур пе
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='scheme'])[2]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].additionalClassifications[0].scheme
 #Відображення схеми основної/додаткової класифікації номенклатур пе
     sleep  5
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='scheme'])[4]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].classification.scheme
     sleep  5
 #Відображення схеми основної/додаткової класифікації номенклатур пе
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='scheme'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].classification.scheme
 #Відображення схеми основної/додаткової класифікації номенклатур пе
     sleep  10
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='scheme'])[${count}]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].classification.id
 #Відображення ідентифікатора основної/додаткової класифікації номен
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='value'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].classification.id
 #Відображення ідентифікатора основної/додаткової класифікації номен
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='value'])[${count}]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].classification.description
 #ідображення опису основної/додаткової класифікації номенклатур пе
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='description'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].classification.description
 #ідображення опису основної/додаткової класифікації номенклатур пе
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='description'])[${count}]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].quantity
 #Відображення кількості номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='quantity'])[1]@textContent
+    Збільшити х
     ${return_value}=  convert to integer  ${return_value}
     set global variable  ${return_value}
 
@@ -1741,110 +1782,160 @@ Login
 #Відображення кількості номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='quantity'])[2]@textContent
     ${return_value}=  convert to integer  ${return_value}
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].unit.name
 #Відображення назви одиниці номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='quantity.unit.name'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].unit.name
 #Відображення назви одиниці номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='quantity.unit.name'])[1]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].unit.code
 #ідображення коду одиниці номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='quantity.unit.code'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].unit.code
 #ідображення коду одиниці номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='quantity.unit.code'])[2]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].deliveryDate.endDate
 #Відображення дати доставки номенклатури переговорної процедури
     ${return_value}=  get value  xpath=(.//span[@dataanchor='deliveryDate.endDate'])[1]
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].deliveryDate.endDate
 #Відображення дати доставки номенклатури переговорної процедури
     ${return_value}=  get value  xpath=(.//span[@dataanchor='deliveryDate.endDate'])[2]
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].deliveryAddress.countryName
 #Відображення назви країни доставки номенклатури переговорної проце
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='countryName'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].deliveryAddress.countryName
 #Відображення назви країни доставки номенклатури переговорної проце
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='countryName'])[2]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].deliveryAddress.postalCode
 #Відображення пошт. коду доставки номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='postalCode'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].deliveryAddress.postalCode
 #Відображення пошт. коду доставки номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='postalCode'])[2]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].deliveryAddress.region
 #Відображення регіону доставки номенклатури переговорної процедури
     sleep  5
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='region'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].deliveryAddress.region
 #Відображення регіону доставки номенклатури переговорної процедури
     sleep  5
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='region'])[2]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].deliveryAddress.locality
 #Відображення населеного пункту адреси доставки номенклатури перего
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='locality'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].deliveryAddress.locality
 #Відображення населеного пункту адреси доставки номенклатури перего
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='locality'])[2]@textContent
+    Зменшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[0].deliveryAddress.streetAddress
 #Відображення вулиці доставки номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='streetAddress'])[1]@textContent
+    Збільшити х
     set global variable  ${return_value}
 
 Отримати інформацію про items[1].deliveryAddress.streetAddress
 #Відображення вулиці доставки номенклатури переговорної процедури
     ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryAddress']/span[@dataanchor='streetAddress'])[2]@textContent
+    Зменшити х
     set global variable  ${return_value}
+
+Отримати інформацію про items[0].deliveryLocation.latitude
+#Відображення координат доставки номенклатури переговорної процедури
+    ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryLocation.latitude'])[1]@textContent
+    ${return_value}=  trim data  ${return_value}
+    ${return_value}=  cut_string     ${return_value}
+    ${return_value}=  convert to number  ${return_value}
+    set global variable  ${return_value}
+
+Отримати інформацію про items[1].deliveryLocation.latitude
+#Відображення координат доставки номенклатури переговорної процедури
+    ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryLocation.latitude'])[1]@textContent
+    ${return_value}=  trim data  ${return_value}
+    ${return_value}=  cut_string     ${return_value}
+    ${return_value}=  convert to number  ${return_value}
+    set global variable  ${return_value}
+
+Отримати інформацію про items[0].deliveryLocation.longitude
+#Відображення координат доставки номенклатури переговорної процедури
+    ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryLocation.longitude'])[1]@textContent
+    ${return_value}=  trim data  ${return_value}
+    ${return_value}=  convert to number  ${return_value}
+    Збільшити х
+    set global variable  ${return_value}
+
+Отримати інформацію про items[1].deliveryLocation.longitude
+#Відображення координат доставки номенклатури переговорної процедури
+    ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryLocation.longitude'])[1]@textContent
+    ${return_value}=  trim data  ${return_value}
+    ${return_value}=  convert to number  ${return_value}
+    Зменшити х
+    set global variable  ${return_value}
+
 
 ################################################################################################################
 #            Кейворди які не можуть бути реалізовані через відсутність відповідних полів на майданчику         #
 ################################################################################################################
-Отримати інформацію про title_en
+Отримати інформацію про переговорний title_en
 
-Отримати інформацію про title_ru
+Отримати інформацію про переговорний title_ru
 
-Отримати інформацію про description_en
+Отримати інформацію про переговорний description_en
 
-Отримати інформацію про description_ru
+Отримати інформацію про переговорний description_ru
 
-Отримати інформацію про items[0].deliveryLocation.latitude
 
-Отримати інформацію про items[0].deliveryAddress.countryName_ru
 
-Отримати інформацію про items[0].deliveryAddress.countryName_en
+Отримати інформацію про переговорний items[0].deliveryAddress.countryName_ru
+
+Отримати інформацію про переговорний items[0].deliveryAddress.countryName_en
 
 ###############################################################################################################
 
-Отримати інформацію про awards[0].complaintPeriod.endDate
+Отримати інформацію про переговорний awards[0].complaintPeriod.endDate
     ${return_value}=   get element attribute        xpath=.//td[@style='display: none']@textContent
     ${return_value}=   trim data                    ${return_value}
     ${contract_date}=  convert to string  ${return_value}
@@ -3410,9 +3501,38 @@ Login
     ...    ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
     ...    ${ARGUMENTS[2]} ==  ${field}
     ...    ${ARGUMENTS[3]} ==  ${value}
+    log to console  *
+    log to console  ${ARGUMENTS[3]}
+    log to console  *
+    log to console  починаємо "Змінити цінову пропозицію"
     go to  ${ViewTenderUrl}
     sleep  10
+    run keyword if  '${TENDER_TYPE}' == 'aboveThresholdEU'            Зміна цінової пропозиції для aboveThresholdEU   @{ARGUMENTS}
+    run keyword if  '${TENDER_TYPE}' == 'aboveThresholdUA'            Зміна цінової пропозиції для aboveThresholdUA   @{ARGUMENTS}
+    log to console  закінчили "Змінити цінову пропозицію"
+
+Зміна цінової пропозиції для aboveThresholdEU
+    [Arguments]  @{ARGUMENTS}
+    [Documentation]
+    ...    ${ARGUMENTS[0]} ==  ${username}
+    ...    ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
+    ...    ${ARGUMENTS[2]} ==  ${field}
+    ...    ${ARGUMENTS[3]} ==  ${value}
     run keyword if  '${ARGUMENTS[3]}' != 'pending'  Змінюємо цінову пропозицію на 5%  @{ARGUMENTS}
+    run keyword and ignore error  click element       id=tender-confirm-bid
+    sleep  2
+    wait until element is visible  xpath=.//button[@ng-click='ok()']  60
+    click element                  xpath=.//button[@ng-click='ok()']
+    sleep  10
+
+Зміна цінової пропозиції для aboveThresholdUA
+    [Arguments]  @{ARGUMENTS}
+    [Documentation]
+    ...    ${ARGUMENTS[0]} ==  ${username}
+    ...    ${ARGUMENTS[1]} ==  ${TENDER['TENDER_UAID']}
+    ...    ${ARGUMENTS[2]} ==  ${field}
+    ...    ${ARGUMENTS[3]} ==  ${value}
+    run keyword if  '${ARGUMENTS[3]}' != 'active'  Змінюємо цінову пропозицію на 5%  @{ARGUMENTS}
     run keyword and ignore error  click element       id=tender-confirm-bid
     sleep  2
     wait until element is visible  xpath=.//button[@ng-click='ok()']  60

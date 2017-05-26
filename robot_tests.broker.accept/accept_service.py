@@ -78,7 +78,10 @@ def adapt_data(tender_data):
     tender_data.data.procuringEntity['address']['region'] = u"місто Київ"
     tender_data.data.procuringEntity['address']['streetAddress'] = u"accOwner"
     tender_data.data.procuringEntity['address']['streetAddress'] = u"accOwner"
-    # tender_data.data.lots[0].value['amount'] = repr(tender_data.data.lots[0].value['amount'])
+    return tender_data
+
+def adapt_data_negotiation(tender_data):
+    tender_data.data.lots[0].value['amount'] = repr(tender_data.data.lots[0].value['amount'])
     return tender_data
 
 def tax_adapt(tax):
