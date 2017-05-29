@@ -78,6 +78,7 @@ def adapt_data(tender_data):
     tender_data.data.procuringEntity['address']['region'] = u"місто Київ"
     tender_data.data.procuringEntity['address']['streetAddress'] = u"accOwner"
     tender_data.data.procuringEntity['address']['streetAddress'] = u"accOwner"
+    tender_data.data.procuringEntity['contactPoint']['url'] = u"http://www.accept-online.com"
     return tender_data
 
 def adapt_data_negotiation(tender_data):
