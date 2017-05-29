@@ -2911,10 +2911,17 @@ Login
   set global variable  ${return_value}
 
 Отримати інформацію про предмет deliveryLocation.latitude
-#Немає відповідної інформації на майданчику
+    ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryLocation.latitude'])[1]@textContent
+    ${return_value}=  trim data  ${return_value}
+    ${return_value}=  cut_string     ${return_value}
+    ${return_value}=  convert to number  ${return_value}
+    set global variable  ${return_value}
 
 Отримати інформацію про предмет deliveryLocation.longitude
-#Немає відповідної інформації на майданчику
+    ${return_value}=  get element attribute  xpath=(.//span[@dataanchor='deliveryLocation.longitude'])[1]@textContent
+    ${return_value}=  trim data  ${return_value}
+    ${return_value}=  convert to number  ${return_value}
+    set global variable  ${return_value}
 
 Отримати інформацію про лот title
 #Відображення заголовку лотів
